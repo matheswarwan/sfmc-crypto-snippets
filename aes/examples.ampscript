@@ -1,0 +1,26 @@
+%%[
+/*
+  AES with AMPscript. Values encrypted here decrypt in Node with
+  aes/sfmc-aes.mjs, and the other way round.
+
+  Keep the password, salt and IV out of your content: store them in a
+  data extension that only you can read, or use a Key Management key
+  (the 3rd, 5th and 7th arguments take key IDs instead of values).
+  salt: 16 hex characters (8 bytes). iv: 32 hex characters (16 bytes).
+*/
+set @password = Lookup("Crypto_Settings", "Value", "Name", "aes_password")
+set @salt     = Lookup("Crypto_Settings", "Value", "Name", "aes_salt")
+set @iv       = Lookup("Crypto_Settings", "Value", "Name", "aes_iv")
+
+/* Encrypt, for example a subscriber key to put in a link */
+set @cipher = EncryptSymmetric(_subscriberkey, "aes", @null, @password, @null, @salt, @null, @iv)
+
+/* Base64 can contain + / and =. If you put @cipher in a URL, URL-encode it
+   and check a round trip in your account: an unencoded + arrives as a space. */
+
+/* Decrypt, for example on the landing page */
+set @id = RequestParameter("id")
+if not Empty(@id) then
+  set @subscriberKey = DecryptSymmetric(@id, "aes", @null, @password, @null, @salt, @null, @iv)
+endif
+]%%
